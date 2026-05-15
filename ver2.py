@@ -4,6 +4,8 @@ import sqlite3
 rows = 25
 cols = 25
 tile_size = 25
+###nestrada
+bg_color = "grey"
 
 window_wigth = tile_size * cols
 window_height = tile_size * rows
@@ -32,7 +34,7 @@ box7 = Tile(7*tile_size, 17*tile_size)
 velocityX = 0
 velocityY = 0
 
-#db funkcijas
+##### db funkcijas #####
 
 def savienot():
     conn = sqlite3.connect('biblioteka.db')
@@ -53,8 +55,27 @@ def pievienot(cursor, conn, nosaukums, autors, gads):
                     (nosaukums, autors, gads))
     conn.commit()
     canvas.create_text(window_wigth/2, window_height/4, f"{nosaukums} pievienots!")
+    
+    move()
 
-#tk funkcijas
+def apskatit(cursor):
+    #@TODO:
+    cursor.execute('SELECT * FROM gramatas')
+    gramatas = cursor.fetchall()
+    if not gramatas:
+        canvas.create_text(window_wigth/2, window_height/4, text='Nav nevienas grāmatas.')
+    for k in gramatas:
+        canvas.create_text(window_wigth/2, window_height/4, text= f'ID: {k[0]} | Nosaukums: {k[1]} | Autors: {k[2]} | Gads: {k[3]}')
+    move()
+
+def dzest(cursor, conn, gramatas_id):
+    cursor.execute('DELETE FROM gramatas WHERE id = ?', (gramatas_id,))
+    conn.commit()
+    canvas.create_text(window_wigth/2, window_height/4, text= 'Gramata dzēsta!')
+    
+    move()
+
+##### tk funkcijas #####
 
 def change_direction(e): 
 
@@ -74,35 +95,64 @@ def change_direction(e):
         velocityY = 0
 
 def move():
-    global worm, box1, box2
+    global worm, box1, box2, velocityX, velocityY, bg_color
     
     if (worm.x < 0 or worm.x >= window_wigth or worm.y < 0 or worm.y >= window_height):
         return
-
-    if (worm.x == box1.x and worm.y == box1.y):
+    #@TODO: 
+    elif (worm.x == 7*tile_size and worm.y == 5*tile_size):
+        velocityX = 0
+        velocityY = 0
         canvas.delete("all")
-        canvas.create_text(window_wigth/2, window_height/3, font= ("ComicNeue", 20), text= 'Nosaukums: ')
+        
+        bg_color = "#b659a3"
+        
+        canvas.create_text(window_wigth/2, window_height/4.5, font= ("ComicNeue", 20), text= 'Nosaukums: ')
         global entry1, entry2, entry3
         entry1 = tkinter.Entry(window, font= ("ComicNeue", 18))
-        canvas.create_window(window_wigth/2, window_height/3+20, window= entry1)
+        canvas.create_window(window_wigth/2, window_height/4.5+50, window= entry1)
 
-        canvas.create_text(window_wigth/2, window_height/3*2, font= ("ComicNeue", 20), text= 'Autors: ')
+        canvas.create_text(window_wigth/2, window_height/2.5, font= ("ComicNeue", 20), text= 'Autors: ')
         entry2 = tkinter.Entry(window, font= ("ComicNeue", 18))
-        canvas.create_window(window_wigth/2, window_height/3+40, window= entry2)
+        canvas.create_window(window_wigth/2, window_height/2.5+50, window= entry2)
                 
-        canvas.create_text(window_wigth/2, window_height/3*2.5, font= ("ComicNeue", 20), text= 'Gads: ')
+        canvas.create_text(window_wigth/2, window_height/1.5, font= ("ComicNeue", 20), text= 'Gads: ')
         entry3 = tkinter.Entry(window, font= ("ComicNeue", 18))
-        canvas.create_window(window_wigth/2, window_height/3+40, window= entry3)
+        canvas.create_window(window_wigth/2, window_height/1.5+50, window= entry3)
         
         ok_button = tkinter.Button(window, text="OK", command=pievienot)
-        canvas.create_window(window_wigth/4, window_height/3, window=ok_button)
+        canvas.create_window(window_wigth/4.5, window_height/2.5+50, window=ok_button)
+        
+    elif (worm.x == 7*tile_size and worm.y == 7*tile_size):
+        velocityX = 0
+        velocityY = 0
+        canvas.delete("all")
+        ok_button = tkinter.Button(window, text="Uz grāmatas sarakstu", command=apskatit)
+        canvas.create_window(window_wigth/2, window_height/4+100, window=ok_button)
+        
+    elif (worm.x == 7*tile_size and worm.y == 9*tile_size):
+        velocityX = 0
+        velocityY = 0
+        canvas.delete("all")
+        canvas.create_text(window_wigth/2, window_height/4, font= ("ComicNeue", 20), text= 'Grāmatas ID: ')
+        global entry4
+        entry4 = tkinter.Entry(window, font= ("ComicNeue", 18))
+        canvas.create_window(window_wigth/2, window_height/4.5+50, window= entry4)
+        
+        ok_button = tkinter.Button(window, text="OK", command=dzest)
+        canvas.create_window(window_wigth/2, window_height/4+100, window=ok_button)
+        
+    elif (worm.x == 7*tile_size and worm.y == 17*tile_size):
+        velocityX = 0
+        velocityY = 0
+        exit()
 
     worm.x += velocityX*tile_size
     worm.y += velocityY*tile_size
 
 def draw():
     global worm, box1, box2, box3, box4, box5, box6, box7
-    move()
+    
 
     canvas.delete("all")
 
@@ -128,8 +178,8 @@ def draw():
     canvas.create_text(10.5*tile_size, 17.5*tile_size, font= ("ComicNeue", 20), text= "7. Iziet", fill= "#fff8f0")
 
     canvas.create_rectangle(worm.x, worm.y, worm.x + tile_size, worm.y + tile_size, fill= "#393939")
-
-    window.after(160, draw)
+    move()
+    window.after(180, draw)
 draw()
 
 window.bind("<KeyRelease>", change_direction)
